@@ -2,7 +2,10 @@ cmake-build-debug/
 *.obj
 *.o
 *.exe
+*.enc
+registry_output.txt
 .idea/tasks.xml
 .idea/dictionaries/
 .idea/dataSources.ids
 .idea/.name
+.idea/vcs.xml

@@ -8,4 +8,9 @@ if(MINGW)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 endif()
 
-add_executable(registryListen main.cpp)
+add_executable(registryListen
+    main.cpp
+    registry_enumerator.cpp
+    encrypted_file_saver.cpp
+)
+target_link_libraries(registryListen bcrypt)
