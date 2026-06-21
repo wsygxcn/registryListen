@@ -1,9 +1,8 @@
 cmake-build-debug/
-.idea/workspace.xml
+*.obj
+*.o
+*.exe
 .idea/tasks.xml
-.idea/shelf/
 .idea/dictionaries/
-.idea/httpRequests/
-.idea/dataSources/
 .idea/dataSources.ids
 .idea/.name
