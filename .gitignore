@@ -3,6 +3,7 @@ cmake-build-debug/
 *.o
 *.exe
 *.enc
+*.key
 registry_output.txt
 .idea/tasks.xml
 .idea/dictionaries/

@@ -1,6 +1,5 @@
 #include "registry_enumerator.h"
 #include "output_writer.h"
-#include "timeout_controller.h"
 
 const wchar_t* RegistryEnumerator::GetValueTypeName(DWORD type) {
     switch (type) {
@@ -62,7 +61,6 @@ void RegistryEnumerator::PrintValue(HKEY hKey, const wchar_t* valueName,
 void RegistryEnumerator::EnumerateKeys(HKEY hRootKey, const std::wstring& path,
                                         int depth, int maxDepth) {
     if (depth > maxDepth) return;
-    if (m_timeout.IsTimeout()) return;
 
     HKEY hKey;
     LONG result = RegOpenKeyExW(hRootKey, path.c_str(), 0, KEY_READ, &hKey);
@@ -82,8 +80,6 @@ void RegistryEnumerator::EnumerateKeys(HKEY hRootKey, const std::wstring& path,
     DWORD dataSize;
 
     while (true) {
-        if (m_timeout.IsTimeout()) break;
-
         valueNameSize = 16384;
         dataSize = 0;
         result = RegEnumValueW(hKey, valueIndex, valueName, &valueNameSize,
@@ -101,8 +97,6 @@ void RegistryEnumerator::EnumerateKeys(HKEY hRootKey, const std::wstring& path,
     DWORD subKeyNameSize;
 
     while (true) {
-        if (m_timeout.IsTimeout()) break;
-
         subKeyNameSize = 256;
         result = RegEnumKeyExW(hKey, subKeyIndex, subKeyName, &subKeyNameSize,
                                nullptr, nullptr, nullptr, nullptr);
@@ -142,11 +136,6 @@ void RegistryEnumerator::EnumerateAll() {
     };
 
     for (const auto& root : rootKeys) {
-        if (m_timeout.IsTimeout()) {
-            m_output.WriteFmt(L"\n已运行 %llu 秒，超时停止。\n",
-                              m_timeout.TimeoutMs() / 1000);
-            break;
-        }
         EnumerateRootKey(root.hKey, root.name);
     }
 }

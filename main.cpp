@@ -1,11 +1,12 @@
 #include <windows.h>
 #include <string>
 
-#include "timeout_controller.h"
 #include "output_writer.h"
 #include "privilege_manager.h"
 #include "registry_enumerator.h"
 #include "encrypted_file_saver.h"
+#include "encrypted_file_reader.h"
+#include "registry_diff.h"
 
 int main() {
     // ---- 1. 组装输出层 ----
@@ -37,24 +38,27 @@ int main() {
     filePath += L"registry_output.enc";
 
     // ---- 4. 注册表枚举 ----
-    TimeoutController timeout(20000);
-    RegistryEnumerator enumerator(compositeWriter, timeout);
+    RegistryEnumerator enumerator(compositeWriter);
 
     compositeWriter.Write(L"开始枚举注册表...\n");
-    timeout.Start();
     enumerator.EnumerateAll();
+    compositeWriter.Write(L"\n注册表枚举完成。\n");
 
-    if (timeout.IsTimeout()) {
-        compositeWriter.Write(L"\n枚举因超时提前终止。\n");
-    } else {
-        compositeWriter.Write(L"\n注册表枚举完成。\n");
+    // ---- 5. 与上次结果对比 ----
+    EncryptedFileReader reader(filePath, consoleWriter);
+    std::vector<char> previousData = reader.Read();
+
+    if (!previousData.empty()) {
+        compositeWriter.Write(L"\n========== 与上次枚举结果对比 ==========\n");
+        RegistryDiff diff(compositeWriter);
+        diff.Compare(bufferWriter.GetBuffer(), previousData);
     }
 
-    // ---- 5. 加密存储 ----
+    // ---- 6. 加密存储 ----
     EncryptedFileSaver saver(filePath, consoleWriter);
     saver.Save(bufferWriter.GetBuffer());
 
-    // ---- 6. 等待退出 ----
+    // ---- 7. 等待退出 ----
     consoleWriter.Write(L"按 Enter 键退出...\n");
 
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);

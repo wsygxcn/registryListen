@@ -12,5 +12,7 @@ add_executable(registryListen
     main.cpp
     registry_enumerator.cpp
     encrypted_file_saver.cpp
+    encrypted_file_reader.cpp
+    registry_diff.cpp
 )
 target_link_libraries(registryListen bcrypt)

@@ -17,6 +17,9 @@ public:
     // 返回 true 表示成功
     bool Save(const std::vector<char>& data);
 
+    // 获取密钥文件路径（.enc 文件同目录下的 .key 文件）
+    std::wstring GetKeyFilePath() const;
+
 private:
     // 字节数组转十六进制宽字符串
     static std::wstring BytesToHex(const unsigned char* data, size_t len);

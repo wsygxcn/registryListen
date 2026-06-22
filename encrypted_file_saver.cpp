@@ -126,9 +126,53 @@ bool EncryptedFileSaver::Save(const std::vector<char>& data) {
     m_output.Write(L"\n==========================================\n");
     m_output.Write(L"请妥善保管以上密钥信息，解密时需要用到。\n");
 
+    // 7. 保存密钥到 .key 文件
+    std::wstring keyFilePath = GetKeyFilePath();
+    HANDLE hKeyFile = CreateFileW(
+        keyFilePath.c_str(),
+        GENERIC_WRITE,
+        FILE_SHARE_READ,
+        nullptr,
+        CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr
+    );
+    if (hKeyFile != INVALID_HANDLE_VALUE) {
+        // 格式: keyHex\nnonceHex
+        std::string keyLine;
+        int utf8Len = WideCharToMultiByte(CP_UTF8, 0, keyHex.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        if (utf8Len > 0) {
+            std::vector<char> keyBuf(utf8Len);
+            WideCharToMultiByte(CP_UTF8, 0, keyHex.c_str(), -1, keyBuf.data(), utf8Len, nullptr, nullptr);
+            keyLine.assign(keyBuf.data(), utf8Len - 1); // exclude null terminator
+        }
+        keyLine += "\n";
+        utf8Len = WideCharToMultiByte(CP_UTF8, 0, nonceHex.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        if (utf8Len > 0) {
+            std::vector<char> nonceBuf(utf8Len);
+            WideCharToMultiByte(CP_UTF8, 0, nonceHex.c_str(), -1, nonceBuf.data(), utf8Len, nullptr, nullptr);
+            keyLine.append(nonceBuf.data(), utf8Len - 1);
+        }
+        keyLine += "\n";
+
+        DWORD written;
+        WriteFile(hKeyFile, keyLine.c_str(), (DWORD)keyLine.size(), &written, nullptr);
+        CloseHandle(hKeyFile);
+    }
+
     // 清零密钥缓冲区
     SecureZeroMemory(key, sizeof(key));
     SecureZeroMemory(nonce, sizeof(nonce));
 
     return true;
+}
+
+std::wstring EncryptedFileSaver::GetKeyFilePath() const {
+    std::wstring keyPath = m_filePath;
+    size_t dotPos = keyPath.find_last_of(L'.');
+    if (dotPos != std::wstring::npos) {
+        keyPath = keyPath.substr(0, dotPos);
+    }
+    keyPath += L".key";
+    return keyPath;
 }
